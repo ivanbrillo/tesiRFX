@@ -1,9 +1,10 @@
+import matplotlib.pyplot as plt
 import pandas as pd
-import matplotlib.pyplot as plt 
 
 def get_columns(dataframe: pd.DataFrame) -> list:
     column_names = dataframe.columns.values.tolist()
     del column_names[0]  # remove TIME column
+    return column_names
 
 
 def subplot(dataframe: pd.DataFrame, axes: list, legend: str = None):
@@ -15,7 +16,7 @@ def subplot(dataframe: pd.DataFrame, axes: list, legend: str = None):
 
 def plot(original_data: pd.DataFrame, modified_data: pd.DataFrame = None, modified_legend: str = None) -> None:
     #  1xN grid of subplot
-    fig, axes = plt.subplots(1, len(column_names), figsize=(15, 3))
+    fig, axes = plt.subplots(1, len(get_columns(original_data)), figsize=(15, 3))
     subplot(original_data, axes)
 
     if modified_data is not None:
