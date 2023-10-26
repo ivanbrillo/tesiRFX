@@ -1,5 +1,5 @@
 import pandas as pd
-from matplotlib import *
+import matplotlib.pyplot as plt 
 
 def get_columns(dataframe: pd.DataFrame) -> list:
     column_names = dataframe.columns.values.tolist()
