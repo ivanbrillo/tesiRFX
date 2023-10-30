@@ -14,12 +14,13 @@ def subplot(dataframe: pd.DataFrame, axes: list, legend: str = None):
         axes[index].legend(loc='lower right')
 
 
-def plot(original_data: pd.DataFrame, modified_data: pd.DataFrame = None, modified_legend: str = None) -> None:
+def plot(original_data: pd.DataFrame, modified_data: list = None, modified_legend: str = None) -> None:
     #  1xN grid of subplot
     fig, axes = plt.subplots(1, len(get_columns(original_data)), figsize=(15, 3))
     subplot(original_data, axes)
 
     if modified_data is not None:
-        subplot(modified_data, axes, modified_legend)
+      for index, frame in enumerate(modified_data):
+        subplot(frame, axes, f'({index}) {modified_legend}' )
 
     plt.show()
