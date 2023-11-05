@@ -35,7 +35,7 @@ def print_metadata_list(data: list) -> None:
 
 
 def get_database(path: str) -> list:
-    xlsx_files = [path + "\\" + file for file in os.listdir(path) if file.endswith(".xlsx")]
+    xlsx_files = [path + "/" + file for file in os.listdir(path) if file.endswith(".xlsx")]
     series_list = list()
 
     for path in xlsx_files:
