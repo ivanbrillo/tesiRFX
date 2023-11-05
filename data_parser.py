@@ -25,8 +25,11 @@ def get_method_type(file_name: str) -> str:
     return "DBD" if "DBD" in file_name else "Torch"
 
 
-def print_metadata_list(data: list) -> None:
-    for data_dict in data:
+def print_metadata_list(data: list, quantity: int = 1) -> None:
+    quantity = quantity if quantity < len(data) else len(data) - 1
+    print(f'Printing the first {quantity} entries out of {len(data)}\n')
+
+    for data_dict in data[:quantity]:
         print(f'date: {data_dict["date"]}')
         print(f'type: {data_dict["type"]}')
         print(f'frequency: {data_dict["frequency"]}')
