@@ -7,7 +7,7 @@ def subplot(data_list: list, axes: list, legend: str = None):
         legend_value = legend_str if legend is None else f"{legend_str} {legend}"
         
         axes[index].plot(series["time_data"].index.tolist(), series["time_data"].values, label=legend_value)
-        axes[index].legend(loc='lower right')
+        axes[index].legend(loc='lower right', fontsize=7)
 
 
 def plot(original_data: list, modified_data: list = None, modified_legend: str = None) -> None:
