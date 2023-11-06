@@ -50,6 +50,9 @@ def get_database(path: str) -> list:
             for column in sheet.iter_cols(values_only=True):
                 time_data = pd.Series(data=column)
 
+                if time_data is None or time_data.empty:
+                    continue
+
                 # reject series of the type (15' RT) or 3Khz + 3Khz
                 try:
                     data_dict = {
@@ -67,4 +70,3 @@ def get_database(path: str) -> list:
                     pass
 
     return series_list
-
