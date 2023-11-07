@@ -50,7 +50,7 @@ def get_database(path: str) -> list:
             for column in sheet.iter_cols(values_only=True):
                 time_data = pd.Series(data=column)
 
-                if time_data is None or time_data.empty:
+                if time_data is None or time_data.empty or time_data.isna().sum() == time_data.size:
                     continue
 
                 # reject series of the type (15' RT) or 3Khz + 3Khz
