@@ -78,7 +78,7 @@ def create_db(path: str) -> list:
         for j in range(i + 1, len(db)):
             if db[i]["time_data"].equals(other=db[j]["time_data"]):
                 break
-            if j == len(db) - 1:
+            if j == len(db) - 1 and not db[i]["time_data"].hasnans:
                 no_duplicates_db.append(db[i])
 
     print(f"len db with duplicates: {len(db)}")
