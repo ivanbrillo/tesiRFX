@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import math
 
 
-def subplot(data_list: list, axes: list, legend: str = None):
+def subplot_grid(data_list: list, axes: list, legend: str = None):
     for index, series in enumerate(data_list):
         legend_str = f"{series['date']} {series['type']} {series['frequency']} {series['exposure time']} {series['supply delay']}"
         legend_value = legend_str if legend is None else f"{legend_str} {legend}"
@@ -10,6 +10,15 @@ def subplot(data_list: list, axes: list, legend: str = None):
         axes[int(index / 4)][index % 4].plot(series["time_data"].index.tolist(), series["time_data"].values,
                                              label=legend_value)
         axes[int(index / 4)][index % 4].legend(loc='lower right', fontsize=7)
+
+
+def subplot(data_list: list, axes: list, legend: str = None):
+    for ax, series in zip(axes, data_list):
+        legend_str = f"{series['date']} {series['type']} {series['frequency']} {series['exposure time']} {series['supply delay']}"
+        legend_value = legend_str if legend is None else f"{legend_str} {legend}"
+
+        ax.plot(series["time_data"].index.tolist(), series["time_data"].values, label=legend_value)
+        ax.legend(loc='lower right', fontsize=7)
 
 
 def plot(original_data: list, modified_data: list = None, modified_legend: str = None) -> None:
@@ -26,9 +35,8 @@ def plot(original_data: list, modified_data: list = None, modified_legend: str =
 def grid_plot(original_data: list) -> None:
     #  (N/4)x4 grid of subplot
     N = len(original_data)
-    fig, axes = plt.subplots(ncols=4, nrows=math.ceil(N / 4), layout='constrained',
-                             figsize=(3.5 * 4, 3.5 * math.ceil(N / 4)))
+    fig, axes = plt.subplots(ncols=4, nrows=math.ceil(N / 4), layout='constrained', figsize=(3.5 * 4, 3.5 * math.ceil(N / 4)))
 
-    subplot(original_data, axes)
+    subplot_grid(original_data, axes)
     # plt.tight_layout()
     plt.show()
