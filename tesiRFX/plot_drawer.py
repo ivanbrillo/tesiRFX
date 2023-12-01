@@ -32,11 +32,14 @@ def plot(original_data: list, modified_data: list = None, modified_legend: str =
     plt.show()
 
 
-def grid_plot(original_data: list) -> None:
+def grid_plot(original_data: list, smoothed_data: list = None) -> None:
     #  (N/4)x4 grid of subplot
     N = len(original_data)
-    fig, axes = plt.subplots(ncols=4, nrows=math.ceil(N / 4), layout='constrained', figsize=(3.5 * 4, 3.5 * math.ceil(N / 4)))
-
+    fig, axes = plt.subplots(ncols=4, nrows=math.ceil(N / 4), layout='constrained',
+                             figsize=(3.5 * 4, 3.5 * math.ceil(N / 4)))
     subplot_grid(original_data, axes)
-    # plt.tight_layout()
+
+    if smoothed_data is not None:
+        subplot_grid(smoothed_data, axes)
+
     plt.show()
