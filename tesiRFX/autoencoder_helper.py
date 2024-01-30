@@ -76,7 +76,10 @@ def get_splitted_np(split_rate=0.8, win_size=80, alpha=40) -> tuple:
     x_test = np.array(list(ds.skip(len_train)))
 
     x_train_smoothed = np.array([atmf(x.tolist(), win_size, alpha) for x in x_train])
+    x_train_smoothed = x_train_smoothed[:, :, np.newaxis]
+
     x_test_smoothed = np.array([atmf(x.tolist(), win_size, alpha) for x in x_test])
+    x_test_smoothed = x_test_smoothed[:, :, np.newaxis]
 
     return x_train_smoothed, x_test_smoothed
 
