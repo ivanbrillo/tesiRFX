@@ -108,7 +108,7 @@ def train_and_evaluate(autoencoder: Model, train_data, test_data, use_callback=T
     )
 
     if isinstance(train_data, tf.data.Dataset):
-        train = (train_data.cache().batch(batch_size),)
+        train = (train_data.cache().batch(batch_size), )
         train_np = np.array([y for x, y in train_data])
         test = test_data.cache().batch(batch_size)
         test_np = np.array([y for x, y in test_data])
@@ -127,12 +127,14 @@ def train_and_evaluate(autoencoder: Model, train_data, test_data, use_callback=T
         callbacks=[PlotLearning(), early_stopping, checkpoint_callback] if use_callback else []
     )
 
+    autoencoder.load_weights('best_model_weights.h5')
+
     decoded_values_test = np.squeeze(np.array(autoencoder.call(test_np)))
     decoded_values_train = np.squeeze(np.array(autoencoder.call(train_np)))
 
     if apply_filter:
-        decoded_values_test = np.array([atmf(x.tolist(), 80, 40) for x in decoded_values_test])
-        decoded_values_train = np.array([atmf(x.tolist(), 80, 40) for x in decoded_values_train])
+      decoded_values_test = np.array([atmf(x.tolist(), 80, 40) for x in decoded_values_test])
+      decoded_values_train = np.array([atmf(x.tolist(), 80, 40) for x in decoded_values_train])
 
     print(" ----- TEST SET ----- ")
     grid_plot(np.squeeze(test_np), np.squeeze(decoded_values_test))
@@ -142,3 +144,5 @@ def train_and_evaluate(autoencoder: Model, train_data, test_data, use_callback=T
 
     print("\n\n\nTEST SET MSE:", MSE(np.squeeze(test_np), np.squeeze(decoded_values_test)))
     print("TRAINING SET MSE:", MSE(np.squeeze(train_np), np.squeeze(decoded_values_train)))
+
+
