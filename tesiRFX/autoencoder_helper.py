@@ -96,7 +96,7 @@ def MSE(x, y):
     return (np.square(x - y)).mean()
 
 
-def train_and_evaluate(autoencoder: Model, train_data, test_data, use_callback=True, epochs_n=200, batch_size=50):
+def train_and_evaluate(autoencoder: Model, train_data, test_data, use_callback=True, epochs_n=200, batch_size=50, apply_filter=False):
     early_stopping = tf.keras.callbacks.EarlyStopping(patience=100, restore_best_weights=True)
 
     checkpoint_callback = ModelCheckpoint(
@@ -127,13 +127,18 @@ def train_and_evaluate(autoencoder: Model, train_data, test_data, use_callback=T
         callbacks=[PlotLearning(), early_stopping, checkpoint_callback] if use_callback else []
     )
 
+    decoded_values_test = np.squeeze(np.array(autoencoder.call(test_np)))
+    decoded_values_train = np.squeeze(np.array(autoencoder.call(train_np)))
+
+    if apply_filter:
+        decoded_values_test = np.array([atmf(x.tolist(), 80, 40) for x in decoded_values_test])
+        decoded_values_train = np.array([atmf(x.tolist(), 80, 40) for x in decoded_values_train])
+
     print(" ----- TEST SET ----- ")
-    decoded_values_test = autoencoder.call(test_np)
     grid_plot(np.squeeze(test_np), np.squeeze(decoded_values_test))
 
     print("\n\n\n ----- TRAIN SET ----- ")
-    decoded_values_train = autoencoder.call(train_np)
     grid_plot(np.squeeze(train_np), np.squeeze(decoded_values_train))
 
-    print("\n\n\n TEST SET MSE:", MSE(np.squeeze(test_np), np.squeeze(decoded_values_test)))
+    print("\n\n\nTEST SET MSE:", MSE(np.squeeze(test_np), np.squeeze(decoded_values_test)))
     print("TRAINING SET MSE:", MSE(np.squeeze(train_np), np.squeeze(decoded_values_train)))
