@@ -60,17 +60,19 @@ def atmf(data: np.array, win_size: int, alpha: int) -> list:
 
 
 def get_splitted_ds(split_rate=0.8, win_size=80, alpha=40) -> tuple:
-    database = create_db("tesiRFX/tesiRFX/data")
-    series_list = [data_dict["time_data"].to_numpy() for data_dict in database]
-    df = pd.DataFrame(series_list)  # each time series in a separate row
-
-    np_smoothed = np.array([atmf(x.tolist(), win_size, alpha) for index, x in df.iterrows()])
-    np_smoothed = np_smoothed[:, :, np.newaxis]
-
-    ds = tf.data.Dataset.from_tensor_slices((np_smoothed, np_smoothed))
-
-    len_train = int(len(ds) * split_rate)
-    return ds.take(len_train), ds.skip(len_train)  # train, test
+    # database = create_db("tesiRFX/tesiRFX/data")
+    # series_list = [data_dict["time_data"].to_numpy() for data_dict in database]
+    # df = pd.DataFrame(series_list)  # each time series in a separate row
+    #
+    # np_smoothed = np.array([atmf(x.tolist(), win_size, alpha) for index, x in df.iterrows()])
+    # np_smoothed = np_smoothed[:, :, np.newaxis]
+    #
+    # ds = tf.data.Dataset.from_tensor_slices((np_smoothed, np_smoothed))
+    #
+    # len_train = int(len(ds) * split_rate)
+    # return ds.take(len_train), ds.skip(len_train)  # train, test
+    x1, x2 = get_splitted_np(split_rate, win_size, alpha)
+    return tf.data.Dataset.from_tensor_slices((x1, x1)), tf.data.Dataset.from_tensor_slices((x2, x2))
 
 
 def get_splitted_np(split_rate=0.8, win_size=80, alpha=40) -> tuple:
