@@ -1,4 +1,4 @@
-import data_parser
+from tesiRFX.tesiRFX.data_parser import create_db
 import pandas as pd
 import numpy as np
 import tensorflow as tf
@@ -59,8 +59,8 @@ def atmf(data: np.array, win_size: int, alpha: int) -> list:
     return [result[0]] * (win_size // 2) + result + [result[-1]] * (win_size // 2)
 
 
-def get_splitted_ds(split_rate=0.8, win_size=60, alpha=32) -> tuple:
-    database = data_parser.create_db("data")
+def get_splitted_ds(split_rate=0.8, win_size=80, alpha=40) -> tuple:
+    database = create_db("tesiRFX/tesiRFX/data")
     series_list = [data_dict["time_data"].to_numpy() for data_dict in database]
     df = pd.DataFrame(series_list)  # each time series in a separate row
 
@@ -71,6 +71,22 @@ def get_splitted_ds(split_rate=0.8, win_size=60, alpha=32) -> tuple:
 
     len_train = int(len(ds) * split_rate)
     return ds.take(len_train), ds.skip(len_train)  # train, test
+
+
+def get_splitted_np(split_rate=0.8, win_size=80, alpha=40) -> tuple:
+    database = create_db("tesiRFX/tesiRFX/data")
+    series_list = [data_dict["time_data"].to_numpy() for data_dict in database]
+    df = pd.DataFrame(series_list)  # each time series in a separate row
+    ds = tf.data.Dataset.from_tensor_slices(df)
+
+    len_train = int(len(ds) * split_rate)
+    x_train = np.array(list(ds.take(len_train)))
+    x_test = np.array(list(ds.skip(len_train)))
+
+    x_train_smoothed = np.array([atmf(x.tolist(), win_size, alpha) for x in x_train])
+    x_test_smoothed = np.array([atmf(x.tolist(), win_size, alpha) for x in x_test])
+
+    return x_train_smoothed, x_test_smoothed
 
 
 def grid_plot(original_data: np.array, decoded_data: np.array) -> None:
@@ -88,11 +104,11 @@ def MSE(x, y):
     return (np.square(x - y)).mean()
 
 
-def model_fit(autoencoder: Model, train_ds, test_ds, batch_size=50, use_callback=True):
+def model_fit_ds(autoencoder: Model, train_ds, test_ds, batch_size=50, use_callback=True, epochs_n=200):
     early_stopping = tf.keras.callbacks.EarlyStopping(patience=100, restore_best_weights=True)
 
     autoencoder.fit(train_ds.cache().batch(batch_size),
-                    epochs=200,
+                    epochs=epochs_n,
                     shuffle=True,
                     validation_data=test_ds.cache().batch(batch_size),
                     verbose=1,
@@ -101,13 +117,39 @@ def model_fit(autoencoder: Model, train_ds, test_ds, batch_size=50, use_callback
     y1 = np.array([y for x, y in test_ds])
     dec_val1 = autoencoder.call(y1)
     print(" ----- TEST SET ----- ")
-    autoencoder.grid_plot(np.squeeze(y1), dec_val1)
+    grid_plot(np.squeeze(y1), dec_val1)
 
     # extract labels from dataset
     y2 = np.array([y for x, y in train_ds])
     dec_val2 = autoencoder.call(y2)
     print("\n\n\n ----- TRAIN SET ----- ")
-    autoencoder.grid_plot(np.squeeze(y2), dec_val2)
+    grid_plot(np.squeeze(y2), dec_val2)
 
-    print(MSE(y1, dec_val1))
-    print(MSE(y2, dec_val2))
+    print("TEST SET MSE:", MSE(y1, dec_val1))
+    print("TRAINING SET MSE:", MSE(y2, dec_val2))
+
+
+def model_fit_np(autoencoder: Model, train_np, test_np, use_callback=True, epochs_n=200):
+    early_stopping = tf.keras.callbacks.EarlyStopping(patience=100, restore_best_weights=True)
+
+    autoencoder.fit(train_np, train_np,
+                    epochs=epochs_n,
+                    shuffle=True,
+                    validation_data=(test_np, test_np),
+                    verbose=1,
+                    callbacks=[PlotLearning(), early_stopping] if use_callback else [])
+
+    encoded_values1 = autoencoder.encoder(test_np).numpy()
+    decoded_values1 = autoencoder.decoder(encoded_values1).numpy()
+
+    encoded_values2 = autoencoder.encoder(train_np).numpy()
+    decoded_values2 = autoencoder.decoder(encoded_values2).numpy()
+
+    print(" ----- TEST SET ----- ")
+    grid_plot(np.squeeze(test_np), decoded_values1)
+
+    print("\n\n\n ----- TRAIN SET ----- ")
+    grid_plot(np.squeeze(train_np), decoded_values2)
+
+    print("TEST SET MSE:", MSE(test_np, decoded_values1))
+    print("TRAINING SET MSE:", MSE(train_np, decoded_values2))
