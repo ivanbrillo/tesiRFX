@@ -131,7 +131,7 @@ def MSE(x, y):
 
 
 def train_and_evaluate(autoencoder: Model, train_data, test_data, use_callback=True, epochs_n=200, batch_size=50, apply_filter=False, custom_loss=False, patience=200):
-    # autoencoder.compile(optimizer='adam', loss=CustomMSE() if custom_loss else losses.MeanSquaredError())
+    autoencoder.compile(optimizer='adam', loss=CustomMSE() if custom_loss else losses.MeanSquaredError())
 
     early_stopping = tf.keras.callbacks.EarlyStopping(patience=patience, restore_best_weights=False, monitor='val_loss')
 
