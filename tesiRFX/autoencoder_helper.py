@@ -8,6 +8,27 @@ from IPython.display import clear_output
 import math
 from tensorflow.keras.models import Model
 from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras import backend as K
+from tensorflow.keras import losses
+
+
+
+class CustomMSE(losses.Loss):
+    def __init__(self, name="custom_mse"):
+        super().__init__(name=name)
+        self.offset = 4
+
+    def call(self, y_true, y_pred):
+        sequence_length = K.int_shape(y_true)[1]
+
+        weights = K.arange(self.offset * sequence_length, (self.offset - 3) * sequence_length, -3, dtype=K.floatx())
+        weights = (weights / K.sum(weights)) * sequence_length  # Normalize weights
+
+        square = K.square(y_true - y_pred)
+        square = K.squeeze(square, axis=-1)
+
+        loss = K.mean(weights * square)
+        return loss
 
 
 class PlotLearning(Callback):
@@ -99,8 +120,10 @@ def MSE(x, y):
     return (np.square(x - y)).mean()
 
 
-def train_and_evaluate(autoencoder: Model, train_data, test_data, use_callback=True, epochs_n=200, batch_size=50, apply_filter=False):
-    early_stopping = tf.keras.callbacks.EarlyStopping(patience=100, restore_best_weights=True)
+def train_and_evaluate(autoencoder: Model, train_data, test_data, use_callback=True, epochs_n=200, batch_size=50, apply_filter=False, custom_loss=False, patience=200):
+    autoencoder.compile(optimizer='adam', loss=CustomMSE() if custom_loss else losses.MeanSquaredError())
+
+    early_stopping = tf.keras.callbacks.EarlyStopping(patience=patience, restore_best_weights=False, monitor='val_loss')
 
     checkpoint_callback = ModelCheckpoint(
         filepath='best_model_weights.h5',
@@ -111,7 +134,7 @@ def train_and_evaluate(autoencoder: Model, train_data, test_data, use_callback=T
     )
 
     if isinstance(train_data, tf.data.Dataset):
-        train = (train_data.cache().batch(batch_size), )
+        train = (train_data.cache().batch(batch_size),)
         train_np = np.array([y for x, y in train_data])
         test = test_data.cache().batch(batch_size)
         test_np = np.array([y for x, y in test_data])
@@ -136,8 +159,8 @@ def train_and_evaluate(autoencoder: Model, train_data, test_data, use_callback=T
     decoded_values_train = np.squeeze(np.array(autoencoder.call(train_np)))
 
     if apply_filter:
-      decoded_values_test = np.array([atmf(x.tolist(), 80, 40) for x in decoded_values_test])
-      decoded_values_train = np.array([atmf(x.tolist(), 80, 40) for x in decoded_values_train])
+        decoded_values_test = np.array([atmf(x.tolist(), 80, 40) for x in decoded_values_test])
+        decoded_values_train = np.array([atmf(x.tolist(), 80, 40) for x in decoded_values_train])
 
     print(" ----- TEST SET ----- ")
     grid_plot(np.squeeze(test_np), np.squeeze(decoded_values_test))
@@ -147,5 +170,3 @@ def train_and_evaluate(autoencoder: Model, train_data, test_data, use_callback=T
 
     print("\n\n\nTEST SET MSE:", MSE(np.squeeze(test_np), np.squeeze(decoded_values_test)))
     print("TRAINING SET MSE:", MSE(np.squeeze(train_np), np.squeeze(decoded_values_train)))
-
-
