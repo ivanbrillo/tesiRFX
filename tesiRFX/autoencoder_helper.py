@@ -12,16 +12,21 @@ from tensorflow.keras import backend as K
 from tensorflow.keras import losses
 
 
-
 class CustomMSE(losses.Loss):
     def __init__(self, name="custom_mse"):
         super().__init__(name=name)
-        self.offset = 4
+        self.offset = 600
 
     def call(self, y_true, y_pred):
         sequence_length = K.int_shape(y_true)[1]
 
-        weights = K.arange(self.offset * sequence_length, (self.offset - 3) * sequence_length, -3, dtype=K.floatx())
+        # Define a step function for weights
+        def step_weights(i):
+            return K.switch(i < self.offset, 10.0, 1.0)
+
+        # Calculate weights for each position in the sequence
+        position = K.arange(0, sequence_length, dtype=K.floatx())
+        weights = K.map_fn(lambda i: step_weights(i), position)
         weights = (weights / K.sum(weights)) * sequence_length  # Normalize weights
 
         square = K.square(y_true - y_pred)
@@ -65,6 +70,11 @@ class PlotLearning(Callback):
 
         plt.tight_layout()
         plt.show()
+
+
+def print_model(autoencoder):
+    tf.keras.utils.plot_model(autoencoder.encoder, to_file='encoder.png', show_shapes=True, show_layer_names=False)
+    tf.keras.utils.plot_model(autoencoder.decoder, to_file='decoder.png', show_shapes=True, show_layer_names=False)
 
 
 def atmf(data: np.array, win_size: int, alpha: int) -> list:
@@ -121,7 +131,7 @@ def MSE(x, y):
 
 
 def train_and_evaluate(autoencoder: Model, train_data, test_data, use_callback=True, epochs_n=200, batch_size=50, apply_filter=False, custom_loss=False, patience=200):
-    autoencoder.compile(optimizer='adam', loss=CustomMSE() if custom_loss else losses.MeanSquaredError())
+    # autoencoder.compile(optimizer='adam', loss=CustomMSE() if custom_loss else losses.MeanSquaredError())
 
     early_stopping = tf.keras.callbacks.EarlyStopping(patience=patience, restore_best_weights=False, monitor='val_loss')
 
@@ -153,7 +163,8 @@ def train_and_evaluate(autoencoder: Model, train_data, test_data, use_callback=T
         callbacks=[PlotLearning(), early_stopping, checkpoint_callback] if use_callback else []
     )
 
-    autoencoder.load_weights('best_model_weights.h5')
+    if use_callback:
+        autoencoder.load_weights('best_model_weights.h5')
 
     decoded_values_test = np.squeeze(np.array(autoencoder.call(test_np)))
     decoded_values_train = np.squeeze(np.array(autoencoder.call(train_np)))
