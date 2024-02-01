@@ -22,7 +22,7 @@ class CustomMSE(losses.Loss):
 
         # Define a step function for weights
         def step_weights(i):
-            return K.switch(i < self.offset, 10.0, 1.0)
+            return K.switch(i < self.offset, 2.0, 1.0)
 
         # Calculate weights for each position in the sequence
         position = K.arange(0, sequence_length, dtype=K.floatx())
