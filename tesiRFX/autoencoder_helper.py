@@ -121,7 +121,8 @@ def grid_plot(original_data: np.array, decoded_data: np.array) -> None:
 
     for index in range(n):
         axes[int(index / 4)][index % 4].plot(original_data[index])
-        axes[int(index / 4)][index % 4].plot(decoded_data[index])
+        if decoded_data is not None:
+          axes[int(index / 4)][index % 4].plot(decoded_data[index])
 
     plt.show()
 
