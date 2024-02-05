@@ -22,7 +22,7 @@ class CustomMSE(losses.Loss):
 
         # Define a step function for weights
         def step_weights(i):
-            return K.switch(i < self.offset, 10.0, 1.0)
+            return K.switch(i < self.offset, 2.0, 1.0)
 
         # Calculate weights for each position in the sequence
         position = K.arange(0, sequence_length, dtype=K.floatx())
@@ -121,7 +121,8 @@ def grid_plot(original_data: np.array, decoded_data: np.array) -> None:
 
     for index in range(n):
         axes[int(index / 4)][index % 4].plot(original_data[index])
-        axes[int(index / 4)][index % 4].plot(decoded_data[index])
+        if decoded_data is not None:
+          axes[int(index / 4)][index % 4].plot(decoded_data[index])
 
     plt.show()
 
@@ -131,7 +132,7 @@ def MSE(x, y):
 
 
 def train_and_evaluate(autoencoder: Model, train_data, test_data, use_callback=True, epochs_n=200, batch_size=50, apply_filter=False, custom_loss=False, patience=200):
-    autoencoder.compile(optimizer='adam', loss=CustomMSE() if custom_loss else losses.MeanSquaredError())
+    autoencoder.compile(optimizer='nadam', loss=CustomMSE() if custom_loss else "mse")
 
     early_stopping = tf.keras.callbacks.EarlyStopping(patience=patience, restore_best_weights=False, monitor='val_loss')
 
@@ -166,8 +167,8 @@ def train_and_evaluate(autoencoder: Model, train_data, test_data, use_callback=T
     if use_callback:
         autoencoder.load_weights('best_model_weights.h5')
 
-    decoded_values_test = np.squeeze(np.array(autoencoder.call(test_np)))
-    decoded_values_train = np.squeeze(np.array(autoencoder.call(train_np)))
+    decoded_values_test = np.squeeze(autoencoder.predict(test_np))
+    decoded_values_train = np.squeeze(autoencoder.predict(train_np))
 
     if apply_filter:
         decoded_values_test = np.array([atmf(x.tolist(), 80, 40) for x in decoded_values_test])
