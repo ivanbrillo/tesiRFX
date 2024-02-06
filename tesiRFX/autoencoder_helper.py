@@ -115,7 +115,9 @@ def get_splitted_np(split_rate=0.8, win_size=80, alpha=40) -> tuple:
     return x_train_smoothed, x_test_smoothed
 
 
-def grid_plot(original_data: np.array, decoded_data: np.array) -> None:
+
+
+def grid_plot(original_data: np.array, decoded_data: np.array, legend1=None, legend2=None) -> None:
     n = len(original_data)
     fig, axes = plt.subplots(ncols=4, nrows=math.ceil(n / 4), layout='constrained', figsize=(3.5 * 4, 3.5 * math.ceil(n / 4)))
 
@@ -123,6 +125,11 @@ def grid_plot(original_data: np.array, decoded_data: np.array) -> None:
         axes[int(index / 4)][index % 4].plot(original_data[index])
         if decoded_data is not None:
           axes[int(index / 4)][index % 4].plot(decoded_data[index])
+        
+        if legend1 is not None and legend2 is not None:
+          axes[int(index / 4)][index % 4].legend([legend1, legend2], loc='lower right', fontsize=7)
+
+
 
     plt.show()
 
