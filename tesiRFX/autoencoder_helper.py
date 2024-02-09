@@ -115,13 +115,21 @@ def get_splitted_np(split_rate=0.8, win_size=80, alpha=40) -> tuple:
     return x_train_smoothed, x_test_smoothed
 
 
-def grid_plot(original_data: np.array, decoded_data: np.array) -> None:
+
+
+def grid_plot(original_data: np.array, decoded_data: np.array, legend1=None, legend2=None) -> None:
     n = len(original_data)
     fig, axes = plt.subplots(ncols=4, nrows=math.ceil(n / 4), layout='constrained', figsize=(3.5 * 4, 3.5 * math.ceil(n / 4)))
 
     for index in range(n):
         axes[int(index / 4)][index % 4].plot(original_data[index])
-        axes[int(index / 4)][index % 4].plot(decoded_data[index])
+        if decoded_data is not None:
+          axes[int(index / 4)][index % 4].plot(decoded_data[index])
+        
+        if legend1 is not None and legend2 is not None:
+          axes[int(index / 4)][index % 4].legend([legend1, legend2], loc='lower right', fontsize=7)
+
+
 
     plt.show()
 
@@ -131,7 +139,7 @@ def MSE(x, y):
 
 
 def train_and_evaluate(autoencoder: Model, train_data, test_data, use_callback=True, epochs_n=200, batch_size=50, apply_filter=False, custom_loss=False, patience=200):
-    autoencoder.compile(optimizer='adam', loss=CustomMSE() if custom_loss else losses.MeanSquaredError())
+    autoencoder.compile(optimizer='nadam', loss=CustomMSE() if custom_loss else "mse")
 
     early_stopping = tf.keras.callbacks.EarlyStopping(patience=patience, restore_best_weights=False, monitor='val_loss')
 
@@ -166,8 +174,8 @@ def train_and_evaluate(autoencoder: Model, train_data, test_data, use_callback=T
     if use_callback:
         autoencoder.load_weights('best_model_weights.h5')
 
-    decoded_values_test = np.squeeze(np.array(autoencoder.call(test_np)))
-    decoded_values_train = np.squeeze(np.array(autoencoder.call(train_np)))
+    decoded_values_test = np.squeeze(autoencoder.predict(test_np))
+    decoded_values_train = np.squeeze(autoencoder.predict(train_np))
 
     if apply_filter:
         decoded_values_test = np.array([atmf(x.tolist(), 80, 40) for x in decoded_values_test])
