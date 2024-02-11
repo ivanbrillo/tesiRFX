@@ -72,7 +72,7 @@ class Visualizer:
         self.cid1 = self.ax[0].figure.canvas.mpl_connect('button_press_event', self.onclick)
         self.cid2 = self.ax[1].figure.canvas.mpl_connect('button_press_event', self.onclick)
 
-        self.full_autoencoder = load_autoencoder("./weights/prova2.h5")
+        self.full_autoencoder = load_autoencoder("./weights/SmallConvAE.h5")
         self.database, np_arrays = load_database('databse.pkl')
         self.x = self.full_autoencoder.encoder.predict(np_arrays, verbose=0).T
 
