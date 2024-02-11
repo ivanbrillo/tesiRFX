@@ -30,10 +30,17 @@ class Autoencoder(Model):
             layers.Conv1DTranspose(filters=1, kernel_size=81, activation='linear', padding="same"),
         ])
 
+        self.set_trainable(False)
+
     def call(self, x):
         encoded = self.encoder(x)
         decoded = self.decoder(encoded)
         return decoded
+
+    def set_trainable(self, trainable):
+        self.trainable = trainable
+        self.encoder.trainable = trainable
+        self.decoder.trainable = trainable
 
 
 class FullAutoencoder(Model):
