@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.keras import layers, losses
+from tensorflow.keras import layers
 from tensorflow.keras.models import Model
 
 
@@ -44,7 +44,7 @@ class Autoencoder(Model):
 
 
 class FullAutoencoder(Model):
-    def __init__(self, autoencoder):
+    def __init__(self, autoencoder: Autoencoder, dim: int):
         super(FullAutoencoder, self).__init__()
 
         self.encoder = tf.keras.Sequential([
@@ -54,11 +54,11 @@ class FullAutoencoder(Model):
             layers.Dense(50, activation='relu'),
             layers.Dense(30, activation='relu'),
             layers.Dense(10, activation='relu'),
-            layers.Dense(4, activation='linear'),
+            layers.Dense(dim, activation='linear'),
         ])
 
         self.decoder = tf.keras.Sequential([
-            layers.Input(shape=(4,)),
+            layers.Input(shape=(dim,)),
             layers.Dense(10, activation='linear'),
             layers.Dense(30, activation='relu'),
             layers.Dense(50, activation='relu'),
