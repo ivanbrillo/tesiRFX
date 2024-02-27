@@ -36,14 +36,23 @@ def load_autoencoder(dim: int) -> models.FullAutoencoder:
     return full_autoencoder
 
 
-def load_database(path: str) -> tuple[dict, np.array, np.array]:
+def load_database(path: str, show_phy: bool) -> tuple[dict, np.array, np.array]:
     with open(path, 'rb') as f:
         database = pickle.load(f)
 
     all_np_array = np.array([data_dict["time_data"].to_numpy() for data_dict in database])
 
+    if show_phy:
+        physical_data = parser("./data")
+        all_np_array = np.concatenate((all_np_array, physical_data))
+        for i in range(len(physical_data)):
+            database.append(
+                {"time_data": physical_data[i], "exposure time": "physical", "type": "physical", "supply delay": "physical", "frequency": "physical"})
+
     all_smoothed = np.array([atmf(x.tolist(), 80, 40) for x in all_np_array])
     all_smoothed = all_smoothed[:, :, np.newaxis]
+    all_np_array = all_np_array[:, :, np.newaxis]
+
     return database, all_np_array, all_smoothed
 
 
@@ -65,6 +74,9 @@ def create_colors(label: str, database: dict, ax: list) -> tuple[dict, list]:
 
     if "0d" in colors_dict.keys() and "100s" in colors_dict.keys():
         colors_dict["0d"] = colors_dict["100s"]
+
+    if "physical" in unique_values:
+        colors_dict["physical"] = (0.0, 0.0, 0.0, 0.4)
 
     legend_handles = [plt.scatter([], [], color=colors_dict[i], label=i) for i in colors_dict]
 

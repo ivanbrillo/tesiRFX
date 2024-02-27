@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.widgets import RadioButtons
+from matplotlib.widgets import RadioButtons, Button
 import helper
 
 
@@ -13,10 +13,12 @@ class Visualizer:
         self.cid2 = self.ax[1].figure.canvas.mpl_connect('button_press_event', self.onclick)
 
         self.current_dim = 2
+        self.show_phy_data = False
+
         self.full_autoencoder = helper.load_autoencoder(self.current_dim)
-        self.database, self.np_arrays, self.np_smooth = helper.load_database('databse.pkl')
-        self.x = np.array(0)
-        self.generate_values()
+        self.database, self.np_arrays, self.np_smooth = helper.load_database('databse.pkl', self.show_phy_data)
+
+        self.pred_val = self.generate_values(self.np_arrays)
 
         self.current_label = "exposure time"
         self.selected = [False] * (self.current_dim // 2)
@@ -26,30 +28,42 @@ class Visualizer:
         self.radio_button = self.create_radiobutton()
         self.picked = (False, 0)
 
-    def generate_values(self):
-        self.x = self.full_autoencoder.encoder.predict(self.np_smooth, verbose=0).T
+    def generate_values(self, values):
+        return self.full_autoencoder.encoder.predict(values, verbose=0).T
 
-    def create_radiobutton(self) -> tuple[RadioButtons, RadioButtons]:
+    def on_button_clicked(self, event):
+        self.show_phy_data = not self.show_phy_data
+        self.database, self.np_arrays, self.np_smooth = helper.load_database('databse.pkl', self.show_phy_data)
+        self.pred_val = self.generate_values(self.np_arrays)
+        self.clear_and_plot()
+
+    def create_radiobutton(self) -> tuple[RadioButtons, RadioButtons, Button]:
         rax = plt.axes([0.05, 0.3, 0.15, 0.2])
         radio1 = RadioButtons(rax, list(helper.names.keys()), 0)
 
         rax = plt.axes([0.05, 0.5, 0.15, 0.12])
         radio2 = RadioButtons(rax, ["2D", "4D"], 0)
 
+        button_ax = plt.axes([0.05, 0.7, 0.15, 0.12])
+        button = Button(button_ax, 'Show physical data')
+        button.on_clicked(self.on_button_clicked)
+
         radio1.on_clicked(self.change_type)
         radio2.on_clicked(self.change_dim)
-        return radio1, radio2
+        return radio1, radio2, button
 
     def scatter_plot(self):
         colors, self.scatter = helper.create_colors(self.current_label, self.database, self.ax)
         all_colors = helper.get_colors_list(self.database, colors, self.current_label)
 
-        self.scatter.append(self.ax[0].scatter(self.x[0], self.x[1], color=all_colors, picker=True))
-        helper.scale(self.ax[0], self.x[:2, :])
+        self.scatter.append(self.ax[0].scatter(self.pred_val[0], self.pred_val[1], color=all_colors, picker=True))
+
+        helper.scale(self.ax[0], self.pred_val[:2, :])
 
         if self.current_dim == 4:
-            self.scatter.append(self.ax[1].scatter(self.x[2], self.x[3], color=all_colors, picker=True))
-            helper.scale(self.ax[1], self.x[2:, :])
+            self.scatter.append(self.ax[1].scatter(self.pred_val[2], self.pred_val[3], color=all_colors, picker=True))
+
+            helper.scale(self.ax[1], self.pred_val[2:, :])
 
     def change_type(self, new_label: str):
         self.current_label = helper.names[new_label]
@@ -65,7 +79,8 @@ class Visualizer:
     def change_dim(self, label: str):
         self.current_dim = int(label[0])
         self.full_autoencoder = helper.load_autoencoder(self.current_dim)
-        self.generate_values()
+
+        self.pred_val = self.generate_values(self.np_arrays)
         self.clear_and_plot()
 
         self.selected = [False] * (self.current_dim // 2)
@@ -92,7 +107,7 @@ class Visualizer:
             coordinate_np = np.array(self.coordinate).reshape([1, self.current_dim])
 
             if self.picked[0]:
-                coordinate_np = np.array([self.x[0][self.picked[1]], self.x[1][self.picked[1]]]).reshape([1, self.current_dim])
+                coordinate_np = np.array([self.pred_val[0][self.picked[1]], self.pred_val[1][self.picked[1]]]).reshape([1, self.current_dim])
 
             values = self.full_autoencoder.decoder(coordinate_np)
 
