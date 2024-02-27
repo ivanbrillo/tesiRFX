@@ -9,11 +9,12 @@ class Visualizer:
     def __init__(self):
         self.fig, self.ax = helper.setup_frame("Calcium Signals' Latent Space Visualizer")
         self.cid1 = self.ax[0].figure.canvas.mpl_connect('button_press_event', self.onclick)
+        self.cid3 = self.ax[0].figure.canvas.mpl_connect('pick_event', self.onpick)
         self.cid2 = self.ax[1].figure.canvas.mpl_connect('button_press_event', self.onclick)
 
         self.current_dim = 2
         self.full_autoencoder = helper.load_autoencoder(self.current_dim)
-        self.database, self.np_arrays = helper.load_database('databse.pkl')
+        self.database, self.np_arrays, self.np_smooth = helper.load_database('databse.pkl')
         self.x = np.array(0)
         self.generate_values()
 
@@ -23,9 +24,10 @@ class Visualizer:
         self.scatter = []
         self.scatter_plot()
         self.radio_button = self.create_radiobutton()
+        self.picked = (False, 0)
 
     def generate_values(self):
-        self.x = self.full_autoencoder.encoder.predict(self.np_arrays, verbose=0).T
+        self.x = self.full_autoencoder.encoder.predict(self.np_smooth, verbose=0).T
 
     def create_radiobutton(self) -> tuple[RadioButtons, RadioButtons]:
         rax = plt.axes([0.05, 0.3, 0.15, 0.2])
@@ -42,11 +44,11 @@ class Visualizer:
         colors, self.scatter = helper.create_colors(self.current_label, self.database, self.ax)
         all_colors = helper.get_colors_list(self.database, colors, self.current_label)
 
-        self.scatter.append(self.ax[0].scatter(self.x[0], self.x[1], color=all_colors))
+        self.scatter.append(self.ax[0].scatter(self.x[0], self.x[1], color=all_colors, picker=True))
         helper.scale(self.ax[0], self.x[:2, :])
 
         if self.current_dim == 4:
-            self.scatter.append(self.ax[1].scatter(self.x[2], self.x[3], color=all_colors))
+            self.scatter.append(self.ax[1].scatter(self.x[2], self.x[3], color=all_colors, picker=True))
             helper.scale(self.ax[1], self.x[2:, :])
 
     def change_type(self, new_label: str):
@@ -80,14 +82,32 @@ class Visualizer:
             self.selected[1] = True
         self.generate_plt()
 
+    def onpick(self, event):
+        if self.current_dim == 2:
+            self.picked = (True, event.ind[0])
+
     def generate_plt(self):
         if all(self.selected):
             fig_new, ax_new = plt.subplots(figsize=(6, 6))
             coordinate_np = np.array(self.coordinate).reshape([1, self.current_dim])
+
+            if self.picked[0]:
+                coordinate_np = np.array([self.x[0][self.picked[1]], self.x[1][self.picked[1]]]).reshape([1, self.current_dim])
+
             values = self.full_autoencoder.decoder(coordinate_np)
 
-            ax_new.plot(values[0])
+            ax_new.plot(values[0], label='Reconstructed')
+
+            if self.picked[0]:
+                coordinate_np1 = self.np_arrays[self.picked[1]].reshape(1800, )
+                coordinate_np2 = self.np_smooth[self.picked[1]].reshape(1800, )
+
+                ax_new.plot(coordinate_np1, label='Original')
+                ax_new.plot(coordinate_np2, label='Smoothed')
+
             ax_new.set_title('Generated Time Series')
+            ax_new.legend()
             plt.show()
 
+            self.picked = (False, 0)
             self.selected = [False] * (self.current_dim // 2)
