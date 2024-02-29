@@ -31,20 +31,20 @@ class Visualizer:
     def generate_values(self, values):
         return self.full_autoencoder.encoder.predict(values, verbose=0).T
 
-    def on_button_clicked(self, event):
+    def on_button_clicked(self, _):
         self.show_phy_data = not self.show_phy_data
         self.database, self.np_arrays, self.np_smooth = helper.load_database('databse.pkl', self.show_phy_data)
         self.pred_val = self.generate_values(self.np_arrays)
         self.clear_and_plot()
 
     def create_radiobutton(self) -> tuple[RadioButtons, RadioButtons, Button]:
-        rax = plt.axes([0.05, 0.3, 0.15, 0.2])
+        rax = plt.axes((0.05, 0.3, 0.15, 0.2))
         radio1 = RadioButtons(rax, list(helper.names.keys()), 0)
 
-        rax = plt.axes([0.05, 0.5, 0.15, 0.12])
+        rax = plt.axes((0.05, 0.5, 0.15, 0.12))
         radio2 = RadioButtons(rax, ["2D", "4D"], 0)
 
-        button_ax = plt.axes([0.05, 0.7, 0.15, 0.12])
+        button_ax = plt.axes((0.05, 0.7, 0.15, 0.12))
         button = Button(button_ax, 'Show physical data')
         button.on_clicked(self.on_button_clicked)
 
@@ -121,6 +121,7 @@ class Visualizer:
                 ax_new.plot(coordinate_np2, label='Smoothed')
 
             ax_new.set_title('Generated Time Series')
+            fig_new.canvas.manager.set_window_title("Decoded series")
             ax_new.legend()
             plt.show()
 
