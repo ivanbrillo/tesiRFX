@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import RadioButtons, Button
 import helper
+from customLib.data_parser import load_database
 
 
 class Visualizer:
@@ -16,7 +17,7 @@ class Visualizer:
         self.show_phy_data = False
 
         self.full_autoencoder = helper.load_autoencoder(self.current_dim)
-        self.database, self.np_arrays, self.np_smooth = helper.load_database('databse.pkl', self.show_phy_data)
+        self.database, self.np_arrays, self.np_smooth = load_database('../databse.pkl', self.show_phy_data)
 
         self.pred_val = self.generate_values(self.np_arrays)
 
@@ -33,7 +34,7 @@ class Visualizer:
 
     def on_button_clicked(self, _):
         self.show_phy_data = not self.show_phy_data
-        self.database, self.np_arrays, self.np_smooth = helper.load_database('databse.pkl', self.show_phy_data)
+        self.database, self.np_arrays, self.np_smooth = load_database('../databse.pkl', self.show_phy_data)
         self.pred_val = self.generate_values(self.np_arrays)
         self.clear_and_plot()
 

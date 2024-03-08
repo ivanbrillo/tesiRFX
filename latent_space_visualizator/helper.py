@@ -1,11 +1,9 @@
-import os
-import pickle
 import numpy as np
-import openpyxl
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from scipy.interpolate import interp1d
-import models
+from customLib.AE import *
+from latent_space_visualizator.model import FullAutoencoder, Autoencoder
 
 names = {
     "exposition time": "exposure time",
@@ -15,45 +13,13 @@ names = {
 }
 
 
-def atmf(data: np.array, win_size: int, alpha: int) -> list:
-    n = len(data)
-    result = [0] * (n - win_size)
-
-    assert win_size > alpha > 0 and alpha % 4 == 0 and win_size % 2 == 0
-
-    for i in range(win_size // 2, n - win_size // 2):
-        window = data[i - win_size // 2:i + win_size // 2]
-        window.sort()
-        result[i - win_size // 2] = sum(window[alpha // 4:win_size - (alpha // 4) * 3]) / (win_size - alpha)
-
-    return [result[0]] * (win_size // 2) + result + [result[-1]] * (win_size // 2)
-
-
-def load_autoencoder(dim: int) -> models.FullAutoencoder:
-    full_autoencoder = models.FullAutoencoder(models.Autoencoder(), dim)
+def load_autoencoder(dim: int) -> AE:
+    outer = AE(*get_sequentials_outer())
+    outer.set_trainable(False)
+    full_autoencoder = AE(*get_seq_full(outer, dim))
     full_autoencoder.build(input_shape=(None, 1800, 1))
-    full_autoencoder.load_weights(f"./weights/FullCOnvAE{str(dim)}Dbis.h5")
+    full_autoencoder.load_weights(f"../weights/FullConvAE{str(dim)}Dbis.h5")
     return full_autoencoder
-
-
-def load_database(path: str, show_phy: bool) -> tuple[dict, np.array, np.array]:
-    with open(path, 'rb') as f:
-        database = pickle.load(f)
-
-    all_np_array = np.array([data_dict["time_data"].to_numpy() for data_dict in database])
-
-    if show_phy:
-        physical_data = parser("./data")
-        all_np_array = np.concatenate((all_np_array, physical_data))
-        for i in range(len(physical_data)):
-            database.append(
-                {"time_data": physical_data[i], "exposure time": "physical", "type": "physical", "supply delay": "physical", "frequency": "physical"})
-
-    all_smoothed = np.array([atmf(x.tolist(), 80, 40) for x in all_np_array])
-    all_smoothed = all_smoothed[:, :, np.newaxis]
-    all_np_array = all_np_array[:, :, np.newaxis]
-
-    return database, all_np_array, all_smoothed
 
 
 def setup_frame(title: str) -> tuple[Figure, list]:
@@ -66,7 +32,7 @@ def setup_frame(title: str) -> tuple[Figure, list]:
     return fig, ax
 
 
-def create_colors(label: str, database: dict, ax: list) -> tuple[dict, list]:
+def create_colors(label: str, database: list, ax: list) -> tuple[dict, list]:
     unique_values = {i[label] for i in database}
 
     color_palette = plt.cm.get_cmap('tab10', len(unique_values))
@@ -86,7 +52,7 @@ def create_colors(label: str, database: dict, ax: list) -> tuple[dict, list]:
     return colors_dict, legend_handles
 
 
-def get_colors_list(database: dict, colors: dict, label: str) -> list:
+def get_colors_list(database: list, colors: dict, label: str) -> list:
     return [colors[i[label]] for i in database]
 
 
@@ -96,28 +62,6 @@ def scale(ax, values):
 
     ax.set_xlim(x_min - 0.1 * (x_max - x_min), x_max + 0.1 * (x_max - x_min))
     ax.set_ylim(y_min - 0.1 * (y_max - y_min), y_max + 0.1 * (y_max - y_min))
-
-
-def parser(path: str) -> np.array:
-    xlsx_files = [path + "/" + file for file in os.listdir(path) if file.endswith(".xlsx")]
-    series_list = list()
-
-    for path in xlsx_files:
-        wb_obj = openpyxl.load_workbook(path)
-
-        for page in wb_obj.sheetnames:
-            sheet = wb_obj[page]
-
-            for column in sheet.iter_cols(values_only=True):
-
-                if column is None or len(column) == 0:
-                    continue
-
-                time_data = np.array(column)
-
-                series_list.append(time_data)
-
-    return _interpolate_series(series_list)
 
 
 def _interpolate_series(series_list: list) -> np.array:
