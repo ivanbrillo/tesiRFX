@@ -42,12 +42,12 @@ def mse(x, y):
 
 
 def train_and_evaluate(autoencoder: Model, train_data, test_data, epochs_n=200, batch_size=100, apply_filter=False, show_latent=False, patience=200,
-                       name_model="model"):
+                       name_model="model", monitor="val_loss"):
     autoencoder.build(input_shape=(None, 1800, 1))
     autoencoder.compile(optimizer='nadam', loss="mse")
 
     early_stopping = tf.keras.callbacks.EarlyStopping(patience=patience, restore_best_weights=False, monitor='val_mse')
-    checkpoint_callback = ModelCheckpoint(filepath='best_model_weights.h5', save_best_only=True, monitor='val_mse', mode='min', save_weights_only=True)
+    checkpoint_callback = ModelCheckpoint(filepath='best_model_weights.h5', save_best_only=True, monitor=monitor, mode='min', save_weights_only=True)
 
     if isinstance(train_data, tf.data.Dataset):
         train = (train_data.cache().batch(batch_size),)
