@@ -24,7 +24,7 @@ def get_splitted_np(split_rate=0.8, win_size=80, alpha=40) -> tuple:
     database, array, smooth = load_database("databse.pkl")
     database = alpha_trimmed_mean_filter(database, win_size, alpha)
 
-    series_list = [data_dict["time_data"].to_numpy() for data_dict in database]
+    series_list = [np.array(data_dict["time_data"]) for data_dict in database]
     df = pd.DataFrame(series_list)  # each time series in a separate row
     ds = tf.data.Dataset.from_tensor_slices(df)
 
