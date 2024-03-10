@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import RadioButtons, Button
 import helper
 from customLib.data_parser import load_database
+from customLib.latent_space_helper import scale, create_colors, get_colors_list
 
 
 class Visualizer:
@@ -54,17 +55,17 @@ class Visualizer:
         return radio1, radio2, button
 
     def scatter_plot(self):
-        colors, self.scatter = helper.create_colors(self.current_label, self.database, self.ax)
-        all_colors = helper.get_colors_list(self.database, colors, self.current_label)
+        colors, self.scatter = create_colors(self.current_label, self.database, self.ax)
+        all_colors = get_colors_list(self.database, colors, self.current_label)
 
         self.scatter.append(self.ax[0].scatter(self.pred_val[0], self.pred_val[1], color=all_colors, picker=True))
 
-        helper.scale(self.ax[0], self.pred_val[:2, :])
+        scale(self.ax[0], self.pred_val[:2, :])
 
         if self.current_dim == 4:
             self.scatter.append(self.ax[1].scatter(self.pred_val[2], self.pred_val[3], color=all_colors, picker=True))
 
-            helper.scale(self.ax[1], self.pred_val[2:, :])
+            scale(self.ax[1], self.pred_val[2:, :])
 
     def change_type(self, new_label: str):
         self.current_label = helper.names[new_label]

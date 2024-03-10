@@ -22,7 +22,7 @@ def get_splitted_ds(split_rate=0.8, win_size=80, alpha=40) -> tuple:
 
 def get_splitted_np(split_rate=0.8, win_size=80, alpha=40) -> tuple:
     database, array, smooth = load_database("databse.pkl")
-    alpha_trimmed_mean_filter(database, win_size, alpha)
+    database = alpha_trimmed_mean_filter(database, win_size, alpha)
 
     series_list = [data_dict["time_data"].to_numpy() for data_dict in database]
     df = pd.DataFrame(series_list)  # each time series in a separate row
@@ -66,8 +66,8 @@ def train_and_evaluate(autoencoder: Model, train_data, test_data, epochs_n=200, 
         shuffle=True,
         validation_data=test,
         verbose=1,
-        callbacks=[PlotLearning(autoencoder, np.concatenate((train_data, test_data)), show_latent=show_latent), early_stopping,
-                   checkpoint_callback], batch_size=batch_size
+        callbacks=[PlotLearning(autoencoder, show_latent=show_latent), early_stopping, checkpoint_callback],
+        batch_size=batch_size
     )
 
     autoencoder.load_weights('best_model_weights.h5')

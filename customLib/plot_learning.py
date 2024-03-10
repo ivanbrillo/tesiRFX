@@ -3,14 +3,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 from IPython.display import clear_output
 
+from customLib.data_parser import load_database
+from customLib.latent_space_helper import create_colors, get_colors_list, scatter_plot_latent
+
 
 class PlotLearning(Callback):
-    def __init__(self, autoencoder=None, data=None, show_latent=False):
+    def __init__(self, autoencoder=None, show_latent=False):
         super().__init__()
         self.autoencoder = autoencoder
-        self.data = data
         self.show_latent = show_latent
         self.metrics = {}
+
+        if show_latent:
+            database, _, self.data = load_database("databse.pkl", False)
+            colors, _ = create_colors("exposure time", database, None)
+            self.all_colors = get_colors_list(database, colors, "exposure time")
 
     def on_train_begin(self, logs=None):
         for metric in logs:
@@ -58,8 +65,9 @@ class PlotLearning(Callback):
             axs[i].grid()
 
         if self.show_latent:
-            axs[len(metrics)].scatter(pred[0], pred[1])
+            scatter_plot_latent(axs[len(metrics)], pred, all_colors=self.all_colors)
             axs[len(metrics)].grid()
+            # axs[len(metrics)].scatter(pred[0], pred[1], )
 
         plt.tight_layout()
         plt.show()
