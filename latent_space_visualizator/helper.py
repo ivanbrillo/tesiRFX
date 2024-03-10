@@ -3,13 +3,13 @@ from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from scipy.interpolate import interp1d
 from customLib.AE import *
-from latent_space_visualizator.model import FullAutoencoder, Autoencoder
 
 names = {
     "exposition time": "exposure time",
     "DBD vs PT": "type",
     "storage time": "supply delay",
     "power or freq": "frequency",
+    "date": "date"
 }
 
 

@@ -31,12 +31,17 @@ class PlotLearning(Callback):
             axs = (axs,)
             plt.ylim(0, 0.05)
         else:
-            for ax in axs[:-new_plt]:
+            axs_limit = axs if not self.show_latent else axs[:-1]
+            for ax in axs_limit:
                 ax.set_ylim((0, 10))
 
         pred = None
         if self.show_latent:
-            pred = self.autoencoder.encoder.predict(self.data)[2].T
+            pred = self.autoencoder.encoder.predict(self.data)
+            if isinstance(pred, tuple):
+                pred = pred[2].T  # if VAE
+            else:
+                pred = pred.T
 
         clear_output(wait=True)
 

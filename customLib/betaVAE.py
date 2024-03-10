@@ -56,8 +56,8 @@ class VAE(Model):
     @tf.function
     def calculate_loss(self, data, training: bool):
         data = data[0]
-        z_mean, z_log_var, z = self.encoder(data, training=True)
-        reconstruction = self.decoder(z, training=True)
+        z_mean, z_log_var, z = self.encoder(data, training=training)
+        reconstruction = self.decoder(z, training=training)
         reconstruction_loss = tf.reduce_mean(tf.reduce_sum(losses.mean_squared_error(data, reconstruction), axis=(1,)))
 
         kl_loss = -0.5 * (1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var))
@@ -65,7 +65,7 @@ class VAE(Model):
         total_loss = reconstruction_loss + kl_loss
 
         if training:
-            self.kl_weight.assign(self.kl_weight * 0.9999)
+            self.kl_weight.assign(self.kl_weight * 0.999)
 
         self.total_loss_tracker.update_state(total_loss)
         self.reconstruction_loss_tracker.update_state(reconstruction_loss)
