@@ -46,7 +46,7 @@ def train_and_evaluate(autoencoder: Model, train_data, test_data, epochs_n=200, 
     autoencoder.build(input_shape=(None, 1800, 1))
     autoencoder.compile(optimizer='nadam', loss="mse")
 
-    early_stopping = tf.keras.callbacks.EarlyStopping(patience=patience, restore_best_weights=False, monitor='val_mse')
+    early_stopping = tf.keras.callbacks.EarlyStopping(patience=patience, restore_best_weights=False, monitor=monitor)
     checkpoint_callback = ModelCheckpoint(filepath='best_model_weights.h5', save_best_only=True, monitor=monitor, mode='min', save_weights_only=True)
 
     if isinstance(train_data, tf.data.Dataset):
