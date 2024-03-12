@@ -34,7 +34,7 @@ class PlotLearning(Callback):
         new_plt = 1 if self.show_latent else 0
         f, axs = plt.subplots(1, len(metrics) + new_plt, figsize=(15, 5))
 
-        if not isinstance(axs, np.ndarray):
+        if len(metrics) + new_plt <= 2:
             axs = (axs,)
             plt.ylim(0, 0.05)
         else:
