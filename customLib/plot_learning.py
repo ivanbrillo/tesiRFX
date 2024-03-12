@@ -34,9 +34,11 @@ class PlotLearning(Callback):
         new_plt = 1 if self.show_latent else 0
         f, axs = plt.subplots(1, len(metrics) + new_plt, figsize=(15, 5))
 
-        if len(metrics) + new_plt <= 2:
+        if len(metrics) + new_plt == 1:
             axs = (axs,)
             plt.ylim(0, 0.05)
+        elif len(metrics) + new_plt == 2:
+            axs[0].ylim(0, 0.05)
         else:
             axs_limit = axs if not self.show_latent else axs[:-1]
             for ax in axs_limit:
