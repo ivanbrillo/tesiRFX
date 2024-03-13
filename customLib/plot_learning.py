@@ -38,7 +38,7 @@ class PlotLearning(Callback):
             axs = (axs,)
             plt.ylim(0, 0.05)
         elif len(metrics) + new_plt == 2:
-            axs[0].ylim(0, 0.05)
+            axs[0].set_ylim((0, 0.05))
         else:
             axs_limit = axs if not self.show_latent else axs[:-1]
             for ax in axs_limit:
