@@ -73,3 +73,43 @@ class PlotLearning(Callback):
 
         plt.tight_layout()
         plt.show()
+
+
+class PlotLearning2(Callback):
+    def __init__(self):
+        super().__init__()
+        self.metrics = {}
+
+    def on_train_begin(self, logs=None):
+        for metric in logs:
+            self.metrics[metric] = []
+
+    def on_epoch_end(self, epoch, logs=None):
+        for metric in logs:
+            if metric in self.metrics:
+                self.metrics[metric].append(logs.get(metric))
+            else:
+                self.metrics[metric] = [logs.get(metric)]
+
+        metrics = [x for x in logs]
+        f, axs = plt.subplots(3, len(metrics)//3, figsize=(15, 5))
+
+        axs = axs.reshape((len(metrics), ))
+        # print(axs.shape)
+        # print(axs[0].shape)
+
+        for ax in axs:
+            ax.set_ylim((0, 1))
+
+        clear_output(wait=True)
+
+        for i, metric in enumerate(metrics):
+            axs[i].plot(range(1, epoch + 2),
+                        self.metrics[metric],
+                        label=metric)
+
+            axs[i].legend()
+            axs[i].grid()
+
+        plt.tight_layout()
+        plt.show()
