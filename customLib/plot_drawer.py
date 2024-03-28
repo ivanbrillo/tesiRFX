@@ -56,5 +56,7 @@ def plot_predictions(original_data: np.array, decoded_data: np.array, legend1=No
 
         if legend1 is not None and legend2 is not None:
             axes[int(index / 4)][index % 4].legend([legend1, legend2], loc='lower right', fontsize=7)
+        elif legend1 is not None:
+            axes[int(index / 4)][index % 4].legend([legend1], loc='lower right', fontsize=7)
 
     plt.show()
