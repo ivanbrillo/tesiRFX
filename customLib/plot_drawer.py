@@ -45,18 +45,23 @@ def grid_plot(original_data, new_data=None, legend=False) -> None:
     plt.show()
 
 
-def plot_predictions(original_data: np.array, decoded_data: np.array, legend1=None, legend2=None) -> None:
+def plot_predictions(original_data: np.array, decoded_data: np.array, legend1=None, legend2=None, unit=None) -> None:
     n = len(original_data)
     fig, axes = plt.subplots(ncols=4, nrows=math.ceil(n / 4), layout='constrained', figsize=(3.5 * 4, 3.5 * math.ceil(n / 4)))
 
     for index in range(n):
         axes[int(index / 4)][index % 4].plot(original_data[index])
+
+        if unit is not None:
+            axes[int(index / 4)][index % 4].set_xlabel('Numero campionamento')
+            axes[int(index / 4)][index % 4].set_ylabel('Concentrazione calcio citosol (µM)')
+
         if decoded_data is not None:
             axes[int(index / 4)][index % 4].plot(decoded_data[index])
 
         if legend1 is not None and legend2 is not None:
-            axes[int(index / 4)][index % 4].legend([legend1, legend2], loc='lower right', fontsize=7)
+            axes[int(index / 4)][index % 4].legend([legend1, legend2], fontsize=7)
         elif legend1 is not None:
-            axes[int(index / 4)][index % 4].legend([legend1], loc='lower right', fontsize=7)
+            axes[int(index / 4)][index % 4].legend([legend1], fontsize=7)
 
     plt.show()
