@@ -31,7 +31,7 @@ class Visualizer:
         self.picked = (False, 0)
 
     def generate_values(self, values):
-        return self.full_autoencoder.encoder.predict(values, verbose=0).T
+        return self.full_autoencoder.encoder.predict(values, verbose=0)[2].T
 
     def on_button_clicked(self, _):
         self.show_phy_data = not self.show_phy_data

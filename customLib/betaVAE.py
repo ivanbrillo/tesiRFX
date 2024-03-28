@@ -28,6 +28,27 @@ def _create_decoder_model(decoder: tf.keras.Sequential, latent_dim: int) -> tf.k
     return tf.keras.Model(inputs, seq, name="Decoder")
 
 
+def get_seq_fullAE(autoencoder):
+    encoder = tf.keras.Sequential([
+        autoencoder.encoder,
+        layers.Dense(70, activation='linear'),
+        layers.Dense(50, activation='relu'),
+        layers.Dense(30, activation='relu'),
+        layers.Dense(10, activation='linear'),
+    ])
+
+    decoder = tf.keras.Sequential([
+        layers.Dense(10, activation='linear'),
+        layers.Dense(30, activation='relu'),
+        layers.Dense(50, activation='relu'),
+        layers.Dense(70, activation='relu'),
+        layers.Dense(80, activation='linear'),
+        autoencoder.decoder,
+    ])
+
+    return encoder, decoder
+
+
 class VAE(Model):
     def __init__(self, encoder_seq: tf.keras.Sequential, decoder_seq: tf.keras.Sequential, latent_dim: int):
         super(VAE, self).__init__()
@@ -65,7 +86,7 @@ class VAE(Model):
         total_loss = reconstruction_loss + kl_loss
 
         if training:
-            self.kl_weight.assign(self.kl_weight * 0.999)
+            self.kl_weight.assign(self.kl_weight * 0.9999)
 
         self.total_loss_tracker.update_state(total_loss)
         self.reconstruction_loss_tracker.update_state(reconstruction_loss)

@@ -67,8 +67,8 @@ def parser(path: str, dict_creator=None):
                     data_dict = dict_creator(page, path, time_data)
                     series_list.append(data_dict)
 
-                except AttributeError:
-                    pass
+                except:
+                    series_list.append(time_data)
 
     return series_list
 
@@ -108,3 +108,22 @@ def load_database(path: str, show_phy=False) -> tuple[list, np.array, np.array]:
     all_np_array = all_np_array[:, :, np.newaxis]
 
     return database, all_np_array, all_smoothed
+
+
+def load_db_shuffled(seed):
+    with open("databse.pkl", 'rb') as f:
+        database = pickle.load(f)
+
+    df = pd.DataFrame(database)
+    df = df.sample(frac=1.0, random_state=seed).reset_index(drop=True)
+
+    x = np.array([np.array(x) for x in df["time_data"]])
+    all_smoothed = np.array([atmf(seq.tolist(), 80, 40) for seq in x])
+
+    all_smoothed = all_smoothed.reshape((239, 1800, 1))
+
+    index = int(len(all_smoothed) * 0.8)
+    train = all_smoothed[:index]
+    test = all_smoothed[index:]
+
+    return train, test

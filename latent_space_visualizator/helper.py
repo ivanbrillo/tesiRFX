@@ -3,6 +3,7 @@ from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from scipy.interpolate import interp1d
 from customLib.AE import *
+from customLib.betaVAE import VAE, get_seq_fullAE
 
 names = {
     "exposition time": "exposure time",
@@ -14,11 +15,15 @@ names = {
 
 
 def load_autoencoder(dim: int) -> AE:
+
     outer = AE(*get_sequentials_outer())
     outer.set_trainable(False)
-    full_autoencoder = AE(*get_seq_full(outer, dim))
+    full_autoencoder = VAE(*get_seq_fullAE(outer), latent_dim=2)
+    # full_autoencoder = AE(*get_seq_full(outer, dim))
     full_autoencoder.build(input_shape=(None, 1800, 1))
-    full_autoencoder.load_weights(f"../weights/FullConvAE{str(dim)}Dbis.h5")
+    # full_autoencoder.load_weights(f"../weights/FullConvAE{str(dim)}Dbis.h5")
+    full_autoencoder.load_weights(f"../weights/vae2.h5")
+
     return full_autoencoder
 
 
